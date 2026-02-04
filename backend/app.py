@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 from groq import Groq
@@ -7,18 +7,26 @@ from groq import Groq
 # 환경 변수 로드
 load_dotenv()
 
-app = Flask(__name__)
+# Flask 앱 설정: frontend 폴더를 정적 파일 폴더로 지정
+base_dir = os.path.dirname(os.path.abspath(__file__))
+frontend_dir = os.path.join(base_dir, '..', 'frontend')
+app = Flask(__name__, static_folder=frontend_dir, static_url_path='')
+
 # CORS 설정: 모든 도메인에서의 요청 허용 (개발 환경)
 CORS(app)
 
 # Groq 클라이언트 초기화
-# API 키가 없는 경우 에러를 방지하기 위해 None 처리 또는 예외 처리
 api_key = os.getenv("GROQ_API_KEY")
 client = None
 if api_key:
     client = Groq(api_key=api_key)
 else:
     print("Warning: GROQ_API_KEY is not set in environment variables.")
+
+@app.route('/')
+def index():
+    """메인 페이지 서빙 (index.html)"""
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -47,7 +55,7 @@ def convert_text():
     if not text:
         return jsonify({"error": "Text is required"}), 400
 
-    # 타겟에 따른 시스템 프롬프트 설정 (1단계: 기본 구조만 잡음)
+    # 타겟에 따른 시스템 프롬프트 설정
     system_prompts = {
         "boss": "당신은 비즈니스 커뮤니케이션 전문가입니다. 입력된 문장을 상사에게 보고하기 적합한 정중하고 격식 있는 말투로 변환해주세요.",
         "colleague": "당신은 비즈니스 커뮤니케이션 전문가입니다. 입력된 문장을 타팀 동료에게 협업을 요청하거나 정보를 공유하기 적합한 정중하지만 친근한 존댓말 말투로 변환해주세요.",
@@ -57,7 +65,7 @@ def convert_text():
     prompt = system_prompts.get(target, system_prompts["boss"])
 
     try:
-        # Groq API 호출 (1단계: 초기 연동 테스트)
+        # Groq API 호출 (최신 Llama 3.3 모델로 변경)
         chat_completion = client.chat.completions.create(
             messages=[
                 {
@@ -69,7 +77,7 @@ def convert_text():
                     "content": text
                 }
             ],
-            model="mixtral-8x7b-32768", # Groq에서 지원하는 모델 중 하나 사용
+            model="llama-3.3-70b-versatile", # <--- 여기서 모델을 최신으로 교체했습니다!
             temperature=0.5,
             max_tokens=1024,
         )
@@ -83,9 +91,9 @@ def convert_text():
         })
 
     except Exception as e:
-        # 에러 로깅 (실제 운영 환경에서는 로깅 라이브러리 사용 권장)
         print(f"Error calling Groq API: {e}")
         return jsonify({"error": "Failed to convert text", "details": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # 5000번 포트로 실행
+    app.run(host='127.0.0.1', port=5000)
