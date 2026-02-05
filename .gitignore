@@ -35,6 +35,11 @@ ENV/
 .vscode/
 .idea/
 
+# Logs
+*.log
+server_out.log
+server_err.log
+
 # OS
 .DS_Store
 Thumbs.db

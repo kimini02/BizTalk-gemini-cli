@@ -8,18 +8,18 @@ from groq import Groq
 # 환경 변수 로드
 load_dotenv()
 
-# 로깅 설정
+# 로깅 설정 (Vercel 환경 고려: 파일 핸들러 제외)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("server.log"),
         logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
 
 # Flask 앱 설정: frontend 폴더를 정적 파일 폴더로 지정
+# Vercel 배포 시 파일 시스템 경로 문제를 피하기 위해 상대 경로 및 절대 경로 처리 보강
 base_dir = os.path.dirname(os.path.abspath(__file__))
 frontend_dir = os.path.join(base_dir, '..', 'frontend')
 app = Flask(__name__, static_folder=frontend_dir, static_url_path='')
