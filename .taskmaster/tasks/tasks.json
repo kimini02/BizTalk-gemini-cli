@@ -1,0 +1,114 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "프로젝트 환경 설정 및 의존성 관리",
+        "description": "Python 가상 환경을 구축하고 Flask 및 Groq API 연동을 위한 필수 라이브러리를 설치합니다.",
+        "details": "1. 프로젝트 루트에 `.venv` 가상 환경 생성\n2. `backend/requirements.txt` 작성: `flask`, `flask-cors`, `python-dotenv`, `groq` 포함\n3. `.env` 파일 생성 및 `GROQ_API_KEY` 환경 변수 정의\n4. `.gitignore` 파일에 `.env` 및 `.venv` 추가",
+        "testStrategy": "가상 환경 활성화 후 `pip install -r backend/requirements.txt`가 에러 없이 완료되는지 확인",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Groq AI API 연동 및 말투 변환 로직 구현",
+        "description": "사용자의 입력을 받아 선택된 대상(상사, 동료, 고객)에 맞는 말투로 변환하는 백엔드 API를 개발합니다.",
+        "details": "1. `backend/app.py`에서 Groq 클라이언트 초기화\n2. 모델 `moonshotai/kimi-k2-instruct-0905` 사용\n3. 대상별(Upward, Lateral, External) 시스템 프롬프트 설계: \n   - 상사: 격식체, 결론 중심 보고\n   - 동료: 존중, 명확한 요청/기한\n   - 고객: 극존칭, 전문성 및 서비스 마인드 강조\n4. POST `/api/convert` 엔드포인트 구현 (입력 텍스트, 대상 수신자 데이터 처리)",
+        "testStrategy": "Postman 또는 Curl을 사용하여 `/api/convert`에 샘플 텍스트와 대상을 전송하고 변환된 응답 결과 확인",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "반응형 웹 UI 레이아웃 구현",
+        "description": "PRD의 디자인 가이드에 따라 HTML 및 CSS를 작성하여 2단 분할 레이아웃을 구축합니다.",
+        "details": "1. `frontend/index.html`: 입력창(Textarea), 대상 선택(Radio/Button Group), 결과창 배치\n2. `frontend/css/style.css`: Flexbox/Grid를 이용한 2단 레이아웃(Desktop) 및 1단 스택(Mobile) 구현\n3. Primary Color(#4A90E2), Background(#F5F7FA) 등 색상 팔레트 적용\n4. `Pretendard` 등 웹폰트 적용 및 반응형 미디어 쿼리(768px 이하) 작성",
+        "testStrategy": "브라우저에서 개발자 도구를 사용하여 모바일 화면(375px)과 데스크톱 화면에서 레이아웃이 정상적으로 전환되는지 확인",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "프론트엔드-백엔드 비동기 통신 및 기능 구현",
+        "description": "JavaScript를 사용하여 API를 호출하고 화면에 결과를 표시하는 핵심 인터랙션을 구현합니다.",
+        "details": "1. `frontend/js/script.js`: Fetch API를 통한 `/api/convert` 비동기 요청 구현\n2. 변환 버튼 클릭 시 로딩 스피너(Spinner) 표시 로직 추가\n3. 변환 결과 텍스트를 결과창 카드에 바인딩\n4. Flask 서버(`app.py`)에서 `frontend` 디렉토리의 정적 파일을 서빙할 수 있도록 `static_folder`, `template_folder` 설정 및 루트 라우트(`/`) 정의",
+        "testStrategy": "텍스트 입력 후 변환 버튼 클릭 시 실제 API로부터 데이터를 받아와 우측 결과창에 표시되는지 확인",
+        "priority": "high",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "클립보드 복사 및 글자 수 카운터 구현",
+        "description": "사용자 편의를 위한 복사 기능과 입력 글자 수 실시간 확인 기능을 추가합니다.",
+        "details": "1. `navigator.clipboard.writeText`를 이용한 변환 결과 복사 기능 구현\n2. 복사 완료 시 토스트 메시지(\"복사되었습니다!\") 표시 (Success Color: #50E3C2)\n3. 입력창 하단에 `현재 글자 수 / 500` 실시간 표시 로직 구현 및 500자 초과 방지",
+        "testStrategy": "글자 수가 실시간으로 갱신되는지 확인하고, 복사 버튼 클릭 후 메모장에 붙여넣어 내용이 일치하는지 검증",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "에러 처리 및 예외 상황 UI 대응",
+        "description": "API 호출 실패 및 네트워크 오류 시 사용자에게 알림을 제공하고 재시도 기회를 제공합니다.",
+        "details": "1. Fetch API의 `catch` 블록에서 에러 핸들링 구현\n2. 에러 발생 시 결과창에 에러 메시지(\"오류가 발생했습니다. 잠시 후 다시 시도해주세요.\")와 재시도 아이콘 표시\n3. 타임아웃 처리(최대 5초) 로직 추가",
+        "testStrategy": "API 키를 의도적으로 잘못 설정하거나 네트워크 연결을 끊은 상태에서 에러 메시지가 정상 출력되는지 확인",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "변환 품질 피드백 수집 UI 구현",
+        "description": "변환 결과에 대한 사용자의 만족도를 수집하는 피드백 버튼 기능을 추가합니다.",
+        "details": "1. 결과창 하단에 '도움됨(👍) / 도움 안 됨(👎)' 버튼 추가\n2. 클릭 시 시각적 피드백(버튼 활성화) 제공 및 로그 기록(현재는 콘솔 로그 또는 간단한 Mock API 호출)",
+        "testStrategy": "결과 생성 후 피드백 버튼이 노출되는지 확인하고 클릭 이벤트가 정상 작동하는지 확인",
+        "priority": "low",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Vercel 배포 설정 및 최적화",
+        "description": "프로젝트를 Vercel 플랫폼에 배포하기 위한 구성 파일을 작성하고 환경을 최적화합니다.",
+        "details": "1. 루트 디렉토리에 `vercel.json` 파일 생성\n2. Flask 백엔드를 Serverless Function으로 동작시키기 위한 `rewrites` 및 `builds` 설정\n3. 배포 시 Vercel Dashboard에서 `GROQ_API_KEY` 환경 변수 설정 안내 문서화",
+        "testStrategy": "Vercel CLI 또는 GitHub 연동 배포 후 실제 운영 URL에서 서비스가 정상 작동하는지 최종 테스트",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2026-02-05T05:06:01.799Z",
+      "updated": "2026-02-05T05:06:01.799Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
