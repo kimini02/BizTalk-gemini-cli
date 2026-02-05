@@ -34,6 +34,7 @@ else:
 
 @app.route('/')
 def index():
+    """메인 페이지 서빙"""
     return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/api/convert', methods=['POST'])
@@ -42,30 +43,39 @@ def convert_text():
         return jsonify({"error": "API 키 설정이 필요합니다."}), 500
 
     data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid request"}), 400
+
     text = data.get('text')
     target = data.get('target', 'boss')
 
+    # 페르소나별 시스템 프롬프트
     system_prompts = {
-        "boss": "상사에게 보고하는 정중한 격식체(-합니다)로 변환하세요. 두괄식 구조와 전문 용어를 사용하세요.",
-        "colleague": "동료에게 보내는 친절하고 협력적인 어투로 변환하세요. 예의를 갖춘 '해요체'를 권장합니다.",
-        "customer": "고객에게 보내는 극존칭의 공식적인 말투로 변환하세요. 신뢰감 있는 표준 서식을 따르세요."
+        "boss": "상사에게 보고하는 정중한 격식체(-합니다)로 변환하세요. 두괄식 구조를 사용하세요.",
+        "colleague": "타팀 동료에게 보내는 친절하고 협력적인 어투로 변환하세요. '해요체'를 권장합니다.",
+        "customer": "외부 고객에게 보내는 극존칭의 공식적인 말투로 변환하세요."
     }
 
     prompt = system_prompts.get(target, system_prompts["boss"])
 
     try:
-        # 모델명을 Groq 지원 모델로 수정했습니다!
+        # 민희님이 확인하신 Kimi K2 모델 ID를 적용했습니다!
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": prompt},
-                {"role": "user", "content": f"변환해줘: \"{text}\""}
+                {"role": "user", "content": f"다음 문장을 요청된 톤으로 변환해줘: \"{text}\""}
             ],
-            model="llama-3.3-70b-versatile", 
+            model="moonshotai/kimi-k2-instruct-0905", 
             temperature=0.3,
             max_tokens=1024,
         )
 
+        if not chat_completion.choices:
+            raise ValueError("No response from AI")
+
         converted_text = chat_completion.choices[0].message.content.strip()
+        
+        # 따옴표 제거 로직
         if converted_text.startswith('"') and converted_text.endswith('"'):
             converted_text = converted_text[1:-1]
 
